@@ -1,37 +1,21 @@
 //Dans ce fichier, on stock toute la logique métier de nos routes.
 
 const Sauce = require('../models/Sauce');
-
+const fs = require('fs');
 
 // AJOUTER UNE SAUCE :
 exports.addOneSauce = (req, res, next) => {
+    const sauceObject = JSON.parse(req.body.sauce);
+    delete sauceObject._id;
     const sauce = new Sauce({
-        userId: req.body.userId,
-        name: req.body.name,
-        manufacturer: req.body.manufacturer,
-        description: req.body.description,
-        mainPepper: req.body.mainPepper,
-        imageUrl: req.body.imageUrl,
-        heat: req.body.heat,
-        likes: req.body.likes,
-        dislikes: req.body.dislikes,
-        usersLiked: req.body.usersLiked,
-        usersDisliked: req.body.usersDisliked
+        ...sauceObject,
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     });
-    sauce.save().then(
-        () => {
-            res.status(201).json({
-                message: 'La sauce a bien été ajoutée !'
-            });
-        }
-    ).catch(
-        (error) => {
-            res.status(400).json({
-                error: error
-            });
-        }
-    );
+    sauce.save()
+        .then(() => res.status(201).json({ message: 'Objet enregistré !' }))
+        .catch(error => res.status(400).json({ error }));
 };
+
 
 // RÉCUPÉRER UNE SAUCE :
 exports.getOneSauce = (req, res, next) => {
@@ -42,16 +26,27 @@ exports.getOneSauce = (req, res, next) => {
 
 // MODIFIER UNE SAUCE :
 exports.modifyOneSauce = (req, res, next) => {
-    Sauce.updateOne({ _id: req.params.id }, {...req.body, _id: req.params.id })
-        .then(() => res.status(200).json({ message: 'Sauce modifiée !' }))
+    const sauceObject = req.file ? {
+        ...JSON.parse(req.body.sauce),
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    } : {...req.body };
+    Sauce.updateOne({ _id: req.params.id }, {...sauceObject, _id: req.params.id })
+        .then(() => res.status(200).json({ message: 'Objet modifié !' }))
         .catch(error => res.status(400).json({ error }));
 };
 
 //  SUPPRIMER UNE SAUCE :
 exports.deleteOneSauce = (req, res, next) => {
-    Sauce.deleteOne({ _id: req.params.id })
-        .then(() => res.status(200).json({ message: 'Sauce supprimée !' }))
-        .catch(error => res.status(400).json({ error }));
+    Sauce.findOne({ _id: req.params.id })
+        .then(sauce => {
+            const filename = sauce.imageUrl.split('/images/')[1];
+            fs.unlink(`images/${filename}`, () => {
+                Sauce.deleteOne({ _id: req.params.id })
+                    .then(() => res.status(200).json({ message: 'Objet supprimé !' }))
+                    .catch(error => res.status(400).json({ error }));
+            });
+        })
+        .catch(error => res.status(500).json({ error }));
 };
 
 // RÉCUPÉRER TOUTES LES SAUCES :
