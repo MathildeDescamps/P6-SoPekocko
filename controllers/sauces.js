@@ -61,6 +61,7 @@ exports.getAllSauces = (req, res, next) => {
 
 // LIKER OU DISLIKER UNE SAUCE : 
 
-exports.likeOneSauce = (req, res, next) => {
-    //Ajouter code pour liker ou disliker une sauce ici.
+exports.likeTheSauce = (req, res, next) => {
+    //On trouve dans la requête le userID et le numéro (-1, 0 ou 1) pour like, dislike ou neutral.
+
 };
