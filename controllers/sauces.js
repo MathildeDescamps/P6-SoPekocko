@@ -6,9 +6,12 @@ const fs = require('fs');
 // AJOUTER UNE SAUCE :
 exports.addOneSauce = (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
+
     delete sauceObject._id;
     const sauce = new Sauce({
         ...sauceObject,
+        likes: 0,
+        dislikes: 0,
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     });
     sauce.save()
@@ -54,4 +57,10 @@ exports.getAllSauces = (req, res, next) => {
     Sauce.find()
         .then(sauces => res.status(200).json(sauces))
         .catch(error => res.status(400).json({ error }));
+};
+
+// LIKER OU DISLIKER UNE SAUCE : 
+
+exports.likeOneSauce = (req, res, next) => {
+    //Ajouter code pour liker ou disliker une sauce ici.
 };
